@@ -321,7 +321,7 @@ int swrm_wcd_notify(struct platform_device *pdev, u32 id, void *data)
 				}
 			}
 			pm_runtime_mark_last_busy(&pdev->dev);
-			pm_runtime_put_autosuspend(&pdev->dev);
+//			pm_runtime_put_autosuspend(&pdev->dev);
 		}
 		mutex_unlock(&swrm->mlock);
 		break;

@@ -33,6 +33,7 @@
 #include <sound/soc-dapm.h>
 #include <sound/tlv.h>
 #include "wsa881x.h"
+#include "wsa881x-temp-sensor.h"
 
 struct wsa_pinctrl_info {
 	struct pinctrl *pinctrl;
@@ -74,6 +75,7 @@ struct wsa881x_priv {
 	struct swr_port port[WSA881X_MAX_SWR_PORTS];
 	struct wsa_pinctrl_info pinctrl_info;
 	int pd_gpio;
+	struct wsa881x_tz_priv tz_pdata;
 	int bg_cnt;
 	int clk_cnt;
 	int version;
@@ -327,6 +329,12 @@ static int wsa881x_probe(struct snd_soc_codec *codec)
 	wsa881x_init(codec);
 	wsa881x->state = WSA881X_DEV_UP;
 
+	if (dev->dev_num % 2 == 0) {
+		snprintf(wsa881x->tz_pdata.name, sizeof(wsa881x->tz_pdata.name), "%s.%x", "wsatz", (u8)dev->addr);
+		wsa881x_init_thermal(&wsa881x->tz_pdata);
+	} else {
+		dev_err(&dev->dev, "%s not registering thermal zone for uneven devnum(%d)\n",__func__,dev->dev_num);
+	}
 	return ret;
 }
 
