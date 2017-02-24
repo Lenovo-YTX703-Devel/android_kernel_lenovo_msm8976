@@ -328,12 +328,10 @@ static int wsa881x_probe(struct snd_soc_codec *codec)
 	wsa881x_init(codec);
 	wsa881x->state = WSA881X_DEV_UP;
 
-	if (dev->dev_num % 2 == 0) {
-		snprintf(wsa881x->tz_pdata.name, sizeof(wsa881x->tz_pdata.name), "%s.%x", "wsatz", (u8)dev->addr);
-		wsa881x_init_thermal(&wsa881x->tz_pdata);
-	} else {
-		dev_err(&dev->dev, "%s not registering thermal zone for uneven devnum(%d)\n",__func__,dev->dev_num);
-	}
+    // register thermal zones, so that the HAL switches to WSA mode
+	snprintf(wsa881x->tz_pdata.name, sizeof(wsa881x->tz_pdata.name), "%s.%x", "wsatz", (u8)dev->addr);
+	wsa881x_init_thermal(&wsa881x->tz_pdata);
+
 	return ret;
 }
 
