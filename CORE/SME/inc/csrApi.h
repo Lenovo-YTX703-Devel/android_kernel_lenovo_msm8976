@@ -666,8 +666,6 @@ typedef enum
     eCSR_ASSOC_STATE_TYPE_INFRA_DISCONNECTED,
     // Participating in a Infra network and connected to a peer
     eCSR_ASSOC_STATE_TYPE_INFRA_CONNECTED,
-    /* Disconnecting with AP or stop connecting process */
-    eCSR_ASSOC_STATE_TYPE_INFRA_DISCONNECTING,
 
 }eCsrConnectState;
 
@@ -1033,6 +1031,7 @@ typedef struct tagCsrNeighborRoamConfigParams
     tANI_U16       nNeighborResultsRefreshPeriod;
     tANI_U16       nEmptyScanRefreshPeriod;
     tANI_U8        nNeighborInitialForcedRoamTo5GhEnable;
+    tANI_U8        nWeakZoneRssiThresholdForRoam;
 }tCsrNeighborRoamConfigParams;
 #endif
 

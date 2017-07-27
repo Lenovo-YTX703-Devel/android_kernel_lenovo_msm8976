@@ -758,11 +758,6 @@ void hdd_checkandupdate_dfssetting( hdd_adapter_t *pAdapter, char *country_code)
        /*New country doesn't support DFS */
        sme_UpdateDfsSetting(WLAN_HDD_GET_HAL_CTX(pAdapter), 0);
     }
-    else
-    {
-       /*New country Supports DFS as well resetting value back from .ini*/
-       sme_UpdateDfsSetting(WLAN_HDD_GET_HAL_CTX(pAdapter), cfg_param->enableDFSChnlScan);
-    }
 
 }
 
@@ -2757,6 +2752,55 @@ void hdd_FWStatisCB( VOS_STATUS status,
     complete(&(fwStatsCtx->completion));
     spin_unlock(&hdd_context_lock);
     return;
+}
+
+/*
+ *hdd_parse_setmaxtxpower_command() - HDD Parse MAXTXPOWER command
+ *@pValue Pointer to MAXTXPOWER command
+ *@pTxPower Pointer to tx power
+ *
+ *This function parses the MAXTXPOWER command passed in the format
+ *  MAXTXPOWER<space>X(Tx power in dbm)
+ *  For example input commands:
+ *  1) MAXTXPOWER -8 -> This is translated into set max TX power to -8 dbm
+ *  2) MAXTXPOWER -23 -> This is translated into set max TX power to -23 dbm
+ *
+ *return - 0 for success non-zero for failure
+ */
+static int hdd_parse_setmaxtxpower_command(unsigned char *pValue, int *pTxPower)
+{
+	unsigned char *inPtr = pValue;
+	int tempInt;
+	int v = 0;
+	*pTxPower = 0;
+
+	inPtr = strnchr(pValue, strlen(pValue), SPACE_ASCII_VALUE);
+	/* no argument after the command */
+	if (NULL == inPtr)
+		return -EINVAL;
+	/* no space after the command */
+	else if (SPACE_ASCII_VALUE != *inPtr)
+		return -EINVAL;
+
+	/* removing empty spaces */
+	while ((SPACE_ASCII_VALUE  == *inPtr) && ('\0' !=  *inPtr)) inPtr++;
+
+	/* no argument followed by spaces */
+	if ('\0' == *inPtr)
+		return 0;
+
+	v = kstrtos32(inPtr, 10, &tempInt);
+
+	/* Range checking for passed parameter */
+	if ((tempInt < HDD_MIN_TX_POWER) || (tempInt > HDD_MAX_TX_POWER))
+		return -EINVAL;
+
+	*pTxPower = tempInt;
+
+	VOS_TRACE( VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_INFO,
+		"SETMAXTXPOWER: %d", *pTxPower);
+
+	return 0;
 }
 
 static int hdd_get_dwell_time(hdd_config_t *pCfg, tANI_U8 *command, char *extra, tANI_U8 n, tANI_U8 *len)
@@ -4837,6 +4881,41 @@ static int hdd_driver_command(hdd_adapter_t *pAdapter,
               ret = -EFAULT;
               goto exit;
            }
+       }
+       else if (strncmp(command, "MAXTXPOWER", 10) == 0)
+       {
+           int status;
+           int txPower;
+           eHalStatus smeStatus;
+           tANI_U8 *value = command;
+           tSirMacAddr bssid = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF};
+           tSirMacAddr selfMac = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF};
+
+           status = hdd_parse_setmaxtxpower_command(value, &txPower);
+           if (status)
+           {
+               VOS_TRACE( VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_ERROR,
+                          "Invalid MAXTXPOWER command ");
+               ret = -EINVAL;
+               goto exit;
+           }
+
+           hddLog(VOS_TRACE_LEVEL_INFO, "max tx power %d selfMac: "
+                        MAC_ADDRESS_STR " bssId: " MAC_ADDRESS_STR " ",
+                        txPower, MAC_ADDR_ARRAY(selfMac),
+                        MAC_ADDR_ARRAY(bssid));
+           smeStatus = sme_SetMaxTxPower((tHalHandle)(pHddCtx->hHal),
+                                         bssid, selfMac, txPower) ;
+           if( smeStatus !=  eHAL_STATUS_SUCCESS )
+           {
+               hddLog(VOS_TRACE_LEVEL_ERROR, "%s:Set max tx power failed",
+                      __func__);
+               ret = -EINVAL;
+               goto exit;
+           }
+
+            hddLog(VOS_TRACE_LEVEL_INFO, "%s: Set max tx power success",
+                   __func__);
        }
 #ifdef FEATURE_WLAN_BATCH_SCAN
        else if (strncmp(command, "WLS_BATCHING", 12) == 0)
@@ -9027,6 +9106,12 @@ VOS_STATUS hdd_stop_adapter( hdd_context_t *pHddCtx, hdd_adapter_t *pAdapter,
          if( hdd_connIsConnected(pstation) ||
              (pstation->conn_info.connState == eConnectionState_Connecting) )
          {
+            /*
+             * Indicate sme of disconnect so that in progress connection
+             * or preauth can be aborted.
+             */
+            sme_abortConnection(WLAN_HDD_GET_HAL_CTX(pAdapter),
+                            pAdapter->sessionId);
             INIT_COMPLETION(pAdapter->disconnect_comp_var);
             if (pWextState->roamProfile.BSSType == eCSR_BSS_TYPE_START_IBSS)
                 halStatus = sme_RoamDisconnect(pHddCtx->hHal,
@@ -11822,6 +11907,7 @@ int hdd_wlan_startup(struct device *dev )
    pHddCtx->last_scan_reject_session_id = 0xFF;
    pHddCtx->last_scan_reject_reason = 0;
    pHddCtx->last_scan_reject_timestamp = 0;
+   pHddCtx->scan_reject_cnt = 0;
 
    init_completion(&pHddCtx->full_pwr_comp_var);
    init_completion(&pHddCtx->standby_comp_var);
@@ -12674,6 +12760,11 @@ int hdd_wlan_startup(struct device *dev )
 
    pHddCtx->is_ap_mode_wow_supported =
               sme_IsFeatureSupportedByFW(SAP_MODE_WOW);
+
+   pHddCtx->is_fatal_event_log_sup =
+      sme_IsFeatureSupportedByFW(FATAL_EVENT_LOGGING);
+   hddLog(VOS_TRACE_LEVEL_INFO, FL("FATAL_EVENT_LOGGING: %d"),
+          pHddCtx->is_fatal_event_log_sup);
 
    hdd_assoc_registerFwdEapolCB(pVosContext);
 
