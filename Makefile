@@ -692,6 +692,10 @@ ifeq ($(shell $(CONFIG_SHELL) $(srctree)/scripts/gcc-goto.sh $(CC)), y)
 	KBUILD_CFLAGS += -DCC_HAVE_ASM_GOTO
 endif
 
+ifeq ($(TARGET_BUILD_VARIANT), eng)
+	KBUILD_CFLAGS += -DTARGET_BUILD_ENG
+endif
+
 include $(srctree)/scripts/Makefile.kasan
 
 # Add user supplied CPPFLAGS, AFLAGS and CFLAGS as the last assignments
