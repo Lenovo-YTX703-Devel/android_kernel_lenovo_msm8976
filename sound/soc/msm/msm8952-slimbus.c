@@ -188,7 +188,7 @@ static void *def_tasha_mbhc_cal(void)
 		(sizeof(btn_cfg->_v_btn_low[0]) * btn_cfg->num_btn);
 
 	btn_high[0] = 75;
-	btn_high[1] = 150;
+	btn_high[1] = 120;
 	btn_high[2] = 237;
 	btn_high[3] = 450;
 	btn_high[4] = 450;
@@ -345,8 +345,8 @@ int msm895x_wsa881x_init(struct snd_soc_dapm_context *dapm)
 	struct msm895x_auxcodec_prefix_map codec_prefix_map[MAX_AUX_CODECS] = {
 	{ "wsa881x.20170211", "SpkrLeft" },
 	{ "wsa881x.20170212", "SpkrRight" },
-	{ "wsa881x.21170213", "SpkrLeft" },
-	{ "wsa881x.21170214", "SpkrRight" } };
+	{ "wsa881x.21170213", "SpkrLeft3" },
+	{ "wsa881x.21170214", "SpkrRight4" } };
 	u8 i;
 
 	if (!dapm->codec->name) {
@@ -372,11 +372,11 @@ int msm895x_wsa881x_init(struct snd_soc_dapm_context *dapm)
 		wsa881x_set_channel_map(dapm->codec, &spkright_ports[0],
 				WSA881X_MAX_SWR_PORTS, &ch_mask[0],
 				&ch_rate[0]);
-	} else {
+	}/* else {
 		dev_err(dapm->codec->dev, "%s: wrong codec name %s\n", __func__,
 			dapm->codec->name);
 		return -EINVAL;
-	}
+	}*/
 	pdata = snd_soc_card_get_drvdata(card);
 	if (pdata && pdata->codec_root)
 		wsa881x_codec_info_create_codec_entry(pdata->codec_root,
