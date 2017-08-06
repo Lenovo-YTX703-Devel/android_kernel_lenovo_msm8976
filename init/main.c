@@ -102,6 +102,9 @@ static inline void mark_rodata_ro(void) { }
 extern void tc_init(void);
 #endif
 
+static int g_com_board_ver = 0;
+static int g_com_board_id = 0;//fgy add for board_id
+static int g_com_lcd_id = 0;//yhj add for lcd_id
 /*
  * Debug helper: via this flag we know that we are in 'early bootup code'
  * where only the boot processor is running with IRQ disabled.  This means
@@ -210,8 +213,66 @@ static int __init quiet_kernel(char *str)
 	return 0;
 }
 
+static int __init setup_com_board_ver(char *str)
+{
+	int id;
+	if (get_option(&str, &id)) {
+		g_com_board_ver = id;
+		return 0;
+	}
+	return -EINVAL;
+}
+
+int get_com_board_ver(void)
+{
+	return g_com_board_ver;
+}
+
+EXPORT_SYMBOL(get_com_board_ver);
+
+//fgy add for board_id
+static int __init setup_com_board_id(char *str)
+{
+	int id;
+	if (get_option(&str, &id)) {
+		g_com_board_id = id;
+		return 0;
+	}
+	return -EINVAL;
+}
+
+int get_com_board_id(void)
+{
+	return g_com_board_id;
+}
+
+EXPORT_SYMBOL(get_com_board_id);
+
+
+//yhj add for lcd_id
+static int __init setup_com_lcd_id(char *str)
+{
+	int id;
+	if (get_option(&str, &id)) {
+		g_com_lcd_id = id;
+		return 0;
+	}
+	return -EINVAL;
+}
+
+int get_com_lcd_id(void)
+{
+	//printk("---yhj check in %s ,g_com_lcd_id = %d .\n",__func__,g_com_lcd_id);
+	return g_com_lcd_id;
+}
+
+EXPORT_SYMBOL(get_com_lcd_id);
+
 early_param("debug", debug_kernel);
 early_param("quiet", quiet_kernel);
+early_param("com_board_ver", setup_com_board_ver);
+early_param("com_board_id", setup_com_board_id);
+early_param("com_lcd_id", setup_com_lcd_id);
 
 static int __init loglevel(char *str)
 {
