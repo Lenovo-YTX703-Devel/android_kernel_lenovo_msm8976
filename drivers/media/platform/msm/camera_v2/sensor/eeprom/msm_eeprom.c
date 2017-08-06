@@ -21,6 +21,7 @@
 #undef CDBG
 #define CDBG(fmt, args...) pr_debug(fmt, ##args)
 
+extern void get_front_mid(uint8_t *memptr);
 DEFINE_MSM_MUTEX(msm_eeprom_mutex);
 #ifdef CONFIG_COMPAT
 static struct v4l2_file_operations msm_eeprom_v4l2_subdev_fops;
@@ -222,6 +223,9 @@ static int read_eeprom_memory(struct msm_eeprom_ctrl_t *e_ctrl,
 				pr_err("%s: page disable failed\n", __func__);
 				return rc;
 			}
+		}
+		if (strcmp(eb_info->eeprom_name, "qtech_ov5695") == 0) {
+		   get_front_mid(block->mapdata);
 		}
 	}
 	return rc;

@@ -17,11 +17,61 @@
 #include "msm_camera_i2c_mux.h"
 #include <linux/regulator/rpm-smd-regulator.h>
 #include <linux/regulator/consumer.h>
+extern void byd_get_camera_name(const char* name, int position);
 
 #undef CDBG
 #define CDBG(fmt, args...) pr_debug(fmt, ##args)
 
 static struct v4l2_file_operations msm_sensor_v4l2_subdev_fops;
+/*front module*/
+static uint8_t front_mid;
+#define GROUP_SIZE 5
+static int get_group_index(uint8_t flag)
+{
+  int group_index = -1 ;
+  flag = flag & 0xFC ;
+  if((flag&0xC0) == 0x40) {
+    group_index = 0 ;
+  } else if((flag&0x30) == 0x10) {
+    group_index = 1 ;
+  } else if((flag&0x0C) == 0x04) {
+    group_index = 2 ;
+  } else {
+    group_index = -1 ;
+  }
+  return group_index ;
+}
+
+void get_front_mid(uint8_t *memptr)
+{
+	uint8_t flag;
+	int group_index = -1, addr_offset = 0;
+	flag = (uint8_t)(memptr[0]);
+    if((group_index = get_group_index(flag)) == -1) {
+	  pr_err("%s: invalid or empty otp data", __func__) ;
+	  return;
+	}
+	addr_offset = GROUP_SIZE * group_index ;
+	front_mid = (uint8_t)(memptr[addr_offset + 1]);
+}
+
+static int match_front_module(const char* name, int position)
+{
+	if(position != 1) return 0;
+	pr_err("%s front_mid = 0x%x\n" , __func__, front_mid);
+	if ((front_mid == 0x06) && !strcmp(name, "ov5695")) {
+	    pr_err("%s match ov5695 succeed.\n" , __func__);
+		return 0;
+	} else if ((front_mid == 0x04) && !strcmp(name, "ov5695_avc")) {
+	    pr_err("%s match ov5695_avc succeed.\n" , __func__);
+		return 0;
+	} else {
+	    pr_err("%s front_mid is not match.\n" , __func__);
+		return -EINVAL;
+	}
+}
+
+
 static void msm_sensor_adjust_mclk(struct msm_camera_power_ctrl_t *ctrl)
 {
 	int idx;
@@ -539,7 +589,7 @@ int msm_sensor_match_id(struct msm_sensor_ctrl_t *s_ctrl)
 	struct msm_camera_i2c_client *sensor_i2c_client;
 	struct msm_camera_slave_info *slave_info;
 	const char *sensor_name;
-
+    int position;
 	if (!s_ctrl) {
 		pr_err("%s:%d failed: %p\n",
 			__func__, __LINE__, s_ctrl);
@@ -548,6 +598,7 @@ int msm_sensor_match_id(struct msm_sensor_ctrl_t *s_ctrl)
 	sensor_i2c_client = s_ctrl->sensor_i2c_client;
 	slave_info = s_ctrl->sensordata->slave_info;
 	sensor_name = s_ctrl->sensordata->sensor_name;
+	position = s_ctrl->sensordata->sensor_info->position;
 
 	if (!sensor_i2c_client || !slave_info || !sensor_name) {
 		pr_err("%s:%d failed: %p %p %p\n",
@@ -570,6 +621,9 @@ int msm_sensor_match_id(struct msm_sensor_ctrl_t *s_ctrl)
 		pr_err("msm_sensor_match_id chip id doesnot match\n");
 		return -ENODEV;
 	}
+
+	if(match_front_module(sensor_name, position)) return -EINVAL;
+	byd_get_camera_name(sensor_name, position);
 	return rc;
 }
 

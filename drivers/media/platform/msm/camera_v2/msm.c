@@ -155,6 +155,60 @@ typedef int (*msm_queue_find_func)(void *d1, void *d2);
 	__ret; \
 })
 
+static struct camera_module_info_t rear_camera_module_info;
+static struct camera_module_info_t front_camera_module_info;
+
+
+static void byd_init_camera_module_info(void) {
+	memset(&rear_camera_module_info, 0, sizeof(struct camera_module_info_t));
+	memset(&front_camera_module_info, 0, sizeof(struct camera_module_info_t));
+}
+
+void byd_get_camera_name(const char* name, int position)
+{
+   switch(position) {
+     case 0://BACK_CAMERA_B
+	   if (!strcmp(name, "ar1335")) {
+		   sprintf(rear_camera_module_info.sensor_name, "%s", "ar1335");
+		   sprintf(rear_camera_module_info.module_name, "%s", "sunny");
+	   }
+	   break;
+	 case 1://FRONT_CAMERA_B
+	   if (!strcmp(name, "ov5695")) {
+		   sprintf(front_camera_module_info.sensor_name, "%s", "ov5695");
+		   sprintf(front_camera_module_info.module_name, "%s", "qtech");
+	   }
+	   else if (!strcmp(name, "ov5695_avc")) {
+		   sprintf(front_camera_module_info.sensor_name, "%s", "ov5695");
+		   sprintf(front_camera_module_info.module_name, "%s", "avc");
+	   }
+	   break;
+	 default:
+	   pr_err("%s : position is invalid\n", __func__);
+	   break;
+
+  }
+}
+
+static ssize_t get_rear_camera_vendor(struct device *dev,
+	struct device_attribute *attr, char *buf)
+{
+	int ret;
+    ret = sprintf(buf, "%s\t%s\n", rear_camera_module_info.module_name, rear_camera_module_info.sensor_name);
+	return ret;
+}
+
+static ssize_t get_front_camera_vendor(struct device *dev,
+	struct device_attribute *attr, char *buf)
+{
+	int ret;
+    ret = sprintf(buf, "%s\t%s\n", front_camera_module_info.module_name, front_camera_module_info.sensor_name);
+	return ret;
+}
+
+static DEVICE_ATTR(rear_camera_vendor, S_IRUGO, get_rear_camera_vendor, NULL);
+static DEVICE_ATTR(front_camera_vendor, S_IRUGO, get_front_camera_vendor, NULL);
+
 static void msm_init_queue(struct msm_queue_head *qhead)
 {
 	BUG_ON(!qhead);
@@ -1176,6 +1230,14 @@ static int msm_probe(struct platform_device *pdev)
 					 &logsync_fops))
 			pr_warn("NON-FATAL: failed to create logsync debugfs file\n");
 	}
+
+	byd_init_camera_module_info();
+	rc = device_create_file(&pdev->dev, &dev_attr_rear_camera_vendor);
+	if (rc)
+		pr_err("%s: rear node create failed\n", __func__);
+	rc = device_create_file(&pdev->dev, &dev_attr_front_camera_vendor);
+	if (rc)
+		pr_err("%s: front node create failed\n", __func__);
 
 	goto probe_end;
 
