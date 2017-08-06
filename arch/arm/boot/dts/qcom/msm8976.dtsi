@@ -1480,7 +1480,7 @@
 		reg = <0xb017000 0x1000>;
 		reg-names = "wdt-base";
 		interrupts = <0 3 0>, <0 4 0>;
-		qcom,bark-time = <11000>;
+		qcom,bark-time = <20000>;
 		qcom,pet-time = <10000>;
 		qcom,ipi-ping;
 	};
@@ -2285,7 +2285,7 @@
 		pinctrl-1 = <&cross_conn_det_act>;
 		qcom,cdc-us-euro-gpios = <&msm_gpio 144 0>;
 
-		qcom,msm-mbhc-hphl-swh = <0>;
+		qcom,msm-mbhc-hphl-swh = <1>;
 		qcom,msm-mbhc-gnd-swh = <0>;
 		qcom,tasha-mclk-clk-freq = <9600000>;
 		asoc-platform = <&pcm0>, <&pcm1>, <&pcm2>, <&voip>, <&voice>,
@@ -2324,11 +2324,11 @@
 				"msm-dai-q6-dev.12292", "msm-dai-q6-dev.12293";
 		asoc-codec = <&stub_codec>;
 		asoc-codec-names = "msm-stub-codec.1";
-		qcom,max-aux-codec = <2>;
+		qcom,max-aux-codec = <4>;
 		qcom,aux-codec = "wsa881x.20170211", "wsa881x.20170212",
 				 "wsa881x.21170213", "wsa881x.21170214";
 		qcom,aux-codec-prefix = "SpkrLeft", "SpkrRight",
-					"SpkrLeft", "SpkrRight";
+					"SpkrLeft3", "SpkrRight4";
 	};
 
 	wcd9xxx_intc: wcd9xxx-irq {
@@ -2842,12 +2842,17 @@
 		qcom,cdc-vdd-px-voltage = <1800000 1800000>;
 		qcom,cdc-vdd-px-current = <10000>;
 
+		cdc-vdd-hs-supply = <&pm8950_l15>;
+		qcom,cdc-vdd-hs-voltage = <3000000 3000000>;
+		qcom,cdc-vdd-hs-current = <10000>;
+
 		qcom,cdc-static-supplies =
 			"cdc-vdd-buck",
 			"cdc-buck-sido",
 			"cdc-vdd-tx-h",
 			"cdc-vdd-rx-h",
-			"cdc-vdd-px";
+			"cdc-vdd-px",
+			"cdc-vdd-hs";
 
 		qcom,cdc-micbias1-mv = <1800>;
 		qcom,cdc-micbias2-mv = <1800>;

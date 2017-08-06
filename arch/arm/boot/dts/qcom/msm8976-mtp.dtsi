@@ -17,13 +17,15 @@
 #include "msm8976-wsa881x.dtsi"
 
 &i2c_4 { /* BLSP1 QUP4 */
-	synaptics@20 {
-		compatible = "synaptics,dsx";
-		reg = <0x20>;
+	synaptics_dsx@38 {
+		compatible = "synaptics,dsx-i2c";
+		reg = <0x38>;
 		interrupt-parent = <&msm_gpio>;
 		interrupts = <65 0x2008>;
-		avdd-supply = <&pm8950_l10>;
-		vdd-supply = <&pm8950_l6>;
+		vdd_ana-supply = <&pm8950_l17>;
+		vcc_i2c-supply = <&pm8950_l6>;
+		synaptics,pwr-reg-name = "vdd_ana";
+		synaptics,bus-reg-name = "vcc_i2c";
 		clock-names = "iface_clk", "core_clk";
 		clocks = <&clock_gcc clk_gcc_blsp1_ahb_clk>,
 			<&clock_gcc clk_gcc_blsp1_qup4_i2c_apps_clk>;
@@ -39,11 +41,17 @@
 		synaptics,disable-gpios;
 		synaptics,detect-device;
 		synaptics,bypass-packrat-id-check;
+		synaptics,power-delay-ms = <60>;
+	    synaptics,reset-on-state = <0>;
+        synaptics,reset-active-ms = <10>;
+        synaptics,reset-delay-ms = <60>;
+        synaptics,ub-i2c-addr = <0x20>;
+		synaptics,irq-flags = <0x2008>; /* IRQF_ONESHOT | IRQF_TRIGGER_LOW */
 		synaptics,device1 {
 			synaptics,package-id = <3528>;
 			synaptics,bypass-sensor-coords-check;
-			synaptics,display-coords = <0 0 1439 2559>;
-			synaptics,panel-coords = <0 0 1439 2559>;
+			synaptics,display-coords = <0 0 1600 2560>;
+			synaptics,panel-coords = <0 0 1600 2560>;
 		};
 	};
 };
@@ -55,7 +63,7 @@
 		qcom,nq-irq = <&msm_gpio 21 0x00>;
 		qcom,nq-ven = <&msm_gpio 20 0x00>;
 		qcom,nq-clkreq = <&pm8950_gpios 5 0x00>;
-		qcom,nq-firm = <&msm_gpio 16 0x00>;
+		//qcom,nq-firm = <&msm_gpio 16 0x00>;
 		interrupt-parent = <&msm_gpio>;
 		qcom,clk-src = "BBCLK2";
 		interrupts = <21 0>;
@@ -68,15 +76,173 @@
 	};
 };
 
+/* add by zouhao*/
+&i2c_8 { /* BLSP2 QUP2 */
+	 fusb301@21 {
+		 compatible = "fusb301";
+		 reg = <0x21>;
+		 interrupt-parent = <&msm_gpio>;
+		 interrupts = <135 0>; /* MSM GPIO 102 */
+		 pinctrl-names = "default";
+		 pinctrl-0 = <&usbc_int_default>;
+	};
+	
+	fusb302@22 {
+	compatible = "fairchild,fusb302";
+	reg = <0x22>;
+	status = "okay";
+	fairchild,int_n = <&msm_gpio 135 0x00>;
+	interrupt-parent = <&msm_gpio>;
+	interrupts = <135 0>; /* MSM GPIO 102 */
+	interrupt-names = "fsc_interrupt_int_n";
+	pinctrl-names = "fusb_active", "fusb_suspend";
+	pinctrl-0 = <&fusb_int_active>; 
+	pinctrl-1 = <&fusb_int_suspend>; 
+	};
+	
+	aw2013@45 {
+		compatible = "awinic,aw2013";
+		reg = <0x45>;
+		//vdd-supply = <&pm8950_l5>;
+		//vcc-supply = <&pm8950_l17>;	
+		/*
+		aw2013,red2 {
+			aw2013,name = "red2";
+			aw2013,id = <0>;
+			aw2013,max-brightness = <255>;
+			aw2013,max-current = <1>;
+			aw2013,rise-time-ms = <2>;
+			aw2013,hold-time-ms = <1>;
+			aw2013,fall-time-ms = <2>;
+			aw2013,off-time-ms = <1>;
+		};
+		*/
+		
+		aw2013,green {
+			aw2013,name = "green";
+			aw2013,id = <0>;
+			aw2013,max-brightness = <255>;
+			aw2013,max-current = <1>;
+			aw2013,rise-time-ms = <2>;
+			aw2013,hold-time-ms = <1>;
+			aw2013,fall-time-ms = <2>;
+			aw2013,off-time-ms = <1>;
+		};
+		
+		/*
+		aw2013,blue {
+			aw2013,name = "blue";
+			aw2013,id = <2>;
+			aw2013,max-brightness = <255>;
+			aw2013,max-current = <1>;
+			aw2013,rise-time-ms = <2>;
+			aw2013,hold-time-ms = <1>;
+			aw2013,fall-time-ms = <2>;
+			aw2013,off-time-ms = <1>;
+		};
+		*/
+	}; 
+};
+
 &i2c_2 {
 	/* Parallel-charger configuration */
-	smb1351-charger@1d {
-		compatible = "qcom,smb1351-charger";
-		reg = <0x1d>;
-		qcom,parallel-en-pin-polarity = <1>;
+	bq25892-charger@6b {	//mzy add 20160322
+		compatible = "qcom,bq25892-charger";
+		reg = <0x6b>;
 		qcom,parallel-charger;
-		qcom,float-voltage-mv = <4400>;
-		qcom,recharge-mv = <100>;
+		qcom,float-voltage-mv = <4352>;
+		qcom,recharge-mv = <200>;
+		qcom,fastchg-current-max-ma = <3800>;
+		qcom,iterm-ma = <192>;
+		
+		interrupt-parent = <&msm_gpio>;
+		interrupts = <68 0>; 
+		pinctrl-names = "default";
+		pinctrl-0 = <&charger_int_default &charger_psel_default>;
+		
+		qcom,psel-gpio = <&msm_gpio 16 0>;
+	};
+	bq27541-battery@55 {
+		compatible = "qcom,bq27541-battery";
+		reg = <0x55>;
+	};
+	backlight@2c {
+			compatible = "ti,lp8557";
+			reg = <0x2c>;
+			bl-name = "lcd-bl";
+			dev-ctrl = /bits/ 8 <0x41>;
+			init-brt = /bits/ 8 <0x80>;
+
+		/* 4V OV, 4 output LED string enabled */
+		rom_14h {
+			rom-addr = /bits/ 8 <0x14>;
+			rom-val = /bits/ 8 <0xbf>;
+		};
+	};
+	/* add by zouhao*/
+	 fusb301@21 {
+		 compatible = "fusb301";
+		 reg = <0x21>;
+		 interrupt-parent = <&msm_gpio>;
+		 interrupts = <135 0>; /* MSM GPIO 102 */
+		 pinctrl-names = "default";
+		 pinctrl-0 = <&usbc_int_default>;
+	};
+
+	fusb302@22 {
+		compatible = "fairchild,fusb302";
+		reg = <0x22>;
+		status = "okay";
+		fairchild,int_n = <&msm_gpio 135 0x00>;
+		interrupt-parent = <&msm_gpio>;
+		interrupts = <135 0>; /* MSM GPIO 102 */
+		interrupt-names = "fsc_interrupt_int_n";
+		pinctrl-names = "fusb_active", "fusb_suspend";
+		pinctrl-0 = <&fusb_int_active>; 
+		pinctrl-1 = <&fusb_int_suspend>; 
+	};
+	
+		aw2013@45 {
+		compatible = "awinic,aw2013";
+		reg = <0x45>;
+		//vdd-supply = <&pm8950_l5>;
+		//vcc-supply = <&pm8950_l17>;	
+	
+		aw2013,red2 {
+			aw2013,name = "red2";
+			aw2013,id = <0>;
+			aw2013,max-brightness = <255>;
+			aw2013,max-current = <1>;
+			aw2013,rise-time-ms = <2>;
+			aw2013,hold-time-ms = <1>;
+			aw2013,fall-time-ms = <2>;
+			aw2013,off-time-ms = <1>;
+		};
+		
+		
+		aw2013,green {
+			aw2013,name = "green";
+			aw2013,id = <1>;
+			aw2013,max-brightness = <255>;
+			aw2013,max-current = <1>;
+			aw2013,rise-time-ms = <2>;
+			aw2013,hold-time-ms = <1>;
+			aw2013,fall-time-ms = <2>;
+			aw2013,off-time-ms = <1>;
+		};
+		
+		/*
+		aw2013,blue {
+			aw2013,name = "blue";
+			aw2013,id = <2>;
+			aw2013,max-brightness = <255>;
+			aw2013,max-current = <1>;
+			aw2013,rise-time-ms = <2>;
+			aw2013,hold-time-ms = <1>;
+			aw2013,fall-time-ms = <2>;
+			aw2013,off-time-ms = <1>;
+		};
+		*/
 	};
 };
 
@@ -108,7 +274,7 @@
 			label = "volume_up";
 			gpios = <&msm_gpio 113 0x1>;
 			linux,input-type = <1>;
-			linux,code = <115>;
+			linux,code = <114>;
 			debounce-interval = <15>;
 		};
 	};
@@ -153,9 +319,9 @@
 			vcc_pon-supply = <&pon_perph_reg>;
 			qcom,play-mode = "direct";
 			qcom,wave-play-rate-us = <5263>;
-			qcom,actuator-type = "lra";
+			qcom,actuator-type = "erm";
 			qcom,wave-shape = "square";
-			qcom,vmax-mv = <2000>;
+			qcom,vmax-mv = <2200>;
 			qcom,ilim-ma = <800>;
 			qcom,sc-deb-cycles = <8>;
 			qcom,int-pwm-freq-khz = <505>;
@@ -218,7 +384,8 @@
 			2 &msm_gpio 100 0>;
 	interrupt-names = "hc_irq", "pwr_irq", "status_irq";
 	cd-gpios = <&msm_gpio 100 0x1>;
-
+	cd-gpios-high = <&msm_gpio 100 0x0>;
+	
 	status = "ok";
 };
 

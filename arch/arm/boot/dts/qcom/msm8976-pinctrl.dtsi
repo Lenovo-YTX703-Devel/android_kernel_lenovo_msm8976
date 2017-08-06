@@ -128,13 +128,35 @@
 		};
 
 		usb_c_intn_pin {
-			qcom,pins = <&gp 101>, <&gp 102>;
-			qcom,num-grp-pins = <2>;
+			qcom,pins = <&gp 96>, <&gp 135>,<&gp 101>;//change by zouhao
+			qcom,num-grp-pins = <3>;
 			qcom,pin-func = <0>;
 			label = "usb_typec-gpio";
 			usbc_int_default: usbc_int_default {
 				drive-strength = <2>;	/* 2 MA */
 				bias-pull-up;		/* PULL UP*/
+			};
+		};
+		
+		charger_int_pin {
+			qcom,pins = <&gp 68>;
+			qcom,num-grp-pins = <1>;
+			qcom,pin-func = <1>;
+			label = "charger_int_pin";
+			charger_int_default: charger_int_default {
+				drive-strength = <2>;	/* 2 MA */
+				bias-pull-up;		/* PULL UP*/
+			};
+		};
+		
+		charger_psel_pin {
+			qcom,pins = <&gp 16>;
+			qcom,num-grp-pins = <1>;
+			qcom,pin-func = <0>;
+			label = "charger_psel_pin";
+			charger_psel_default:  charger_psel_default {
+				drive-strength = <2>;	/* 2 MA */
+				bias-pull-up;			/* PULL UP*/
 			};
 		};
 
@@ -533,7 +555,7 @@
 			label = "cam_sensor_mclk0_default";
 			/* active state */
 			cam_sensor_mclk0_default: cam_sensor_mclk0_default {
-				drive-strength = <2>; /* 2 MA */
+				drive-strength = <6>; /* 6 MA */
 				bias-disable; /* No PULL */
 			};
 		};
@@ -545,15 +567,15 @@
 			label = "cam_sensor_mclk0_sleep";
 			/*suspended state */
 			cam_sensor_mclk0_sleep: cam_sensor_mclk0_sleep {
-				drive-strength = <2>; /* 2 MA */
+				drive-strength = <6>; /* 6 MA */
 				bias-pull-down; /* PULL DOWN */
 			};
 		};
 
 		cam_sensor_rear_default {
-			/* RESET, STANDBY */
-			qcom,pins = <&gp 129>, <&gp 35>;
-			qcom,num-grp-pins = <2>;
+			/* STANDBY */
+			qcom,pins = <&gp 35>;
+			qcom,num-grp-pins = <1>;
 			label = "cam_sensor_rear_default";
 			/* active state */
 			cam_sensor_rear_default: cam_sensor_rear_default {
@@ -563,9 +585,9 @@
 		};
 
 		cam_sensor_rear_sleep {
-			/* RESET, STANDBY */
-			qcom,pins = <&gp 129>, <&gp 35>;
-			qcom,num-grp-pins = <2>;
+			/* STANDBY */
+			qcom,pins = <&gp 35>;
+			qcom,num-grp-pins = <1>;
 			label = "cam_sensor_rear_sleep";
 			/*suspended state */
 			cam_sensor_rear_sleep: cam_sensor_rear_sleep {
@@ -625,8 +647,8 @@
 
 		cam_sensor_front_default {
 			/* RESET, STANDBY */
-			qcom,pins = <&gp 130>, <&gp 36>;
-			qcom,num-grp-pins = <2>;
+			qcom,pins = <&gp 131>;//modified by luzhenfei 2016-04-08
+			qcom,num-grp-pins = <1>;
 			label = "cam_sensor_front_default";
 			/* active state */
 			cam_sensor_front_default: cam_sensor_front_default {
@@ -637,8 +659,8 @@
 
 		cam_sensor_front_sleep {
 			/* RESET, STANDBY */
-			qcom,pins = <&gp 130>, <&gp 36>;
-			qcom,num-grp-pins = <2>;
+			qcom,pins = <&gp 131>;//modified by luzhenfei 2016-04-08
+			qcom,num-grp-pins = <1>;
 			label = "cam_sensor_front_sleep";
 			/*suspended state */
 			cam_sensor_front_sleep: cam_sensor_front_sleep {
@@ -1411,7 +1433,8 @@
 		};
 
 		wsa_spkr_sd: wsa-spkr-sd {
-			qcom,pins = <&gp 132>;
+			/*qcom,pins = <&gp 132>;*/
+			qcom,pins = <&gp 32>;
 			qcom,num-grp-pins = <1>;
 			qcom,pin-func = <0>;
 			label = "wsa-spkr-sd";
@@ -1554,6 +1577,22 @@
 			};
 		};
 
+
+		fusb_int {
+			qcom,pins = <&gp 135>;
+			qcom,pin-func = <0>;
+			qcom,num-grp-pins = <1>;
+			label = "fusb_int";
+			fusb_int_active: active {
+			drive-strength = <2>;
+			bias-pull-up;
+			};
+			fusb_int_suspend: suspend {
+			drive-strength = <2>;
+			bias-pull-up; 	
+			};
+		};
+		
 		pmx_nfc_reset {
 			qcom,pins = <&gp 20>;
 			qcom,pin-func = <0>;
