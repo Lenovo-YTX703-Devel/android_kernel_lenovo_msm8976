@@ -469,7 +469,7 @@ static ssize_t wcnss_wlan_macaddr_show(struct device *dev,
 		penv->wlan_nv_macAddr[4], penv->wlan_nv_macAddr[5]);
 }
 
-static DEVICE_ATTR(wcnss_mac_addr, S_IRUSR | S_IWUSR,
+static DEVICE_ATTR(wcnss_mac_addr, 644,
 	wcnss_wlan_macaddr_show, wcnss_wlan_macaddr_store);
 
 static ssize_t wcnss_serial_number_show(struct device *dev,
@@ -1643,6 +1643,22 @@ int wcnss_get_wlan_mac_address(char mac_addr[WLAN_MAC_ADDR_SIZE])
 	return 0;
 }
 EXPORT_SYMBOL(wcnss_get_wlan_mac_address);
+
+/*fgy add 2016/05/30*/
+/* set wlan mac address from WCNSS_qcom_wlan_nv.bin*/
+int wcnss_set_wlan_mac_address(char mac_addr[WLAN_MAC_ADDR_SIZE])
+{
+	if (!penv)
+		return -ENODEV;
+
+	memcpy( penv->wlan_nv_macAddr,mac_addr, WLAN_MAC_ADDR_SIZE);
+	pr_debug("%s: set MAC Addr:" MAC_ADDRESS_STR "\n", __func__,
+		penv->wlan_nv_macAddr[0], penv->wlan_nv_macAddr[1],
+		penv->wlan_nv_macAddr[2], penv->wlan_nv_macAddr[3],
+		penv->wlan_nv_macAddr[4], penv->wlan_nv_macAddr[5]);
+	return 0;
+}
+EXPORT_SYMBOL(wcnss_set_wlan_mac_address);
 
 static int enable_wcnss_suspend_notify;
 
