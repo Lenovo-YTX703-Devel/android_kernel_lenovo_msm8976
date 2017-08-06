@@ -24,6 +24,7 @@
 #include <linux/msm-bus.h>
 #include <linux/msm-bus-board.h>
 
+int is_igc_configured;
 struct mdp_csc_cfg mdp_csc_convert[MDSS_MDP_MAX_CSC] = {
 	[MDSS_MDP_CSC_YUV2RGB_601L] = {
 		0,
@@ -953,9 +954,13 @@ static void pp_igc_config(unsigned long flags, char __iomem *addr,
 {
 	u32 tbl_idx;
 	if (flags & PP_FLAGS_DIRTY_IGC) {
-		if (igc_config->ops & MDP_PP_OPS_WRITE)
+		trace_printk("sravank pcc igc \n");
+		if ((igc_config->ops & MDP_PP_OPS_WRITE) &&
+			(is_igc_configured == 0)) {
 			pp_update_igc_lut(igc_config, addr, pipe_num,
 					 pipe_cnt);
+			is_igc_configured = 1;
+		}
 
 		if (igc_config->ops & MDP_PP_IGC_FLAG_ROM0) {
 			pp_sts->pcc_sts |= PP_STS_ENABLE;
@@ -1925,6 +1930,25 @@ static int pp_dspp_setup(u32 disp_num, struct mdss_mdp_mixer *mixer)
 		pr_debug("skip configuring dspp features\n");
 		goto opmode_config;
 	}
+	pp_pcc_config(flags, base + MDSS_MDP_REG_DSPP_PCC_BASE, pp_sts,
+					&mdss_pp_res->pcc_disp_cfg[disp_num]);
+
+	pp_igc_config(flags, mdata->mdp_base + MDSS_MDP_REG_IGC_DSPP_BASE,
+				pp_sts, &mdss_pp_res->igc_disp_cfg[disp_num],
+				dspp_num, mdata->ndspp);
+
+	if (flags & PP_FLAGS_DIRTY_PGC) {
+		pgc_config = &mdss_pp_res->pgc_disp_cfg[disp_num];
+		if (pgc_config->flags & MDP_PP_OPS_WRITE) {
+			addr = base + MDSS_MDP_REG_DSPP_GC_BASE;
+			pp_update_argc_lut(addr, pgc_config);
+		}
+		if (pgc_config->flags & MDP_PP_OPS_DISABLE)
+			pp_sts->pgc_sts &= ~PP_STS_ENABLE;
+		else if (pgc_config->flags & MDP_PP_OPS_ENABLE)
+			pp_sts->pgc_sts |= PP_STS_ENABLE;
+		pp_sts_set_split_bits(&pp_sts->pgc_sts, pgc_config->flags);
+	}
 
 	if (mdata->mdp_rev >= MDSS_MDP_HW_REV_103) {
 		pp_pa_v2_config(flags, base + MDSS_MDP_REG_DSPP_PA_BASE, pp_sts,
@@ -1934,12 +1958,6 @@ static int pp_dspp_setup(u32 disp_num, struct mdss_mdp_mixer *mixer)
 		pp_pa_config(flags, base + MDSS_MDP_REG_DSPP_PA_BASE, pp_sts,
 				&mdss_pp_res->pa_disp_cfg[disp_num]);
 
-	pp_pcc_config(flags, base + MDSS_MDP_REG_DSPP_PCC_BASE, pp_sts,
-					&mdss_pp_res->pcc_disp_cfg[disp_num]);
-
-	pp_igc_config(flags, mdata->mdp_base + MDSS_MDP_REG_IGC_DSPP_BASE,
-				pp_sts, &mdss_pp_res->igc_disp_cfg[disp_num],
-				dspp_num, mdata->ndspp);
 
 	pp_enhist_config(flags, base, pp_sts,
 				&mdss_pp_res->enhist_disp_cfg[disp_num]);
@@ -1962,18 +1980,6 @@ static int pp_dspp_setup(u32 disp_num, struct mdss_mdp_mixer *mixer)
 		pp_gamut_config(&mdss_pp_res->gamut_disp_cfg[disp_num], base,
 				pp_sts);
 
-	if (flags & PP_FLAGS_DIRTY_PGC) {
-		pgc_config = &mdss_pp_res->pgc_disp_cfg[disp_num];
-		if (pgc_config->flags & MDP_PP_OPS_WRITE) {
-			addr = base + MDSS_MDP_REG_DSPP_GC_BASE;
-			pp_update_argc_lut(addr, pgc_config);
-		}
-		if (pgc_config->flags & MDP_PP_OPS_DISABLE)
-			pp_sts->pgc_sts &= ~PP_STS_ENABLE;
-		else if (pgc_config->flags & MDP_PP_OPS_ENABLE)
-			pp_sts->pgc_sts |= PP_STS_ENABLE;
-		pp_sts_set_split_bits(&pp_sts->pgc_sts, pgc_config->flags);
-	}
 opmode_config:
 	pp_dspp_opmode_config(ctl, dspp_num, pp_sts, mdata->mdp_rev, &opmode);
 
@@ -2161,6 +2167,8 @@ int mdss_mdp_pp_resume(struct mdss_mdp_ctl *ctl, u32 dspp_num)
 	disp_num = ctl->mfd->index;
 	pp_sts = mdss_pp_res->pp_disp_sts[disp_num];
 
+	is_igc_configured = 0;
+
 	if (pp_sts.pa_sts & PP_STS_ENABLE) {
 		flags |= PP_FLAGS_DIRTY_PA;
 		if (mdata->mdp_rev >= MDSS_MDP_HW_REV_103) {
@@ -2278,6 +2286,8 @@ int mdss_mdp_pp_init(struct device *dev)
 
 	if (!mdata)
 		return -EPERM;
+
+	is_igc_configured = 0;
 
 	mutex_lock(&mdss_pp_mutex);
 	if (!mdss_pp_res) {

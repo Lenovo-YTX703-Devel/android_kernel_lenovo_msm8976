@@ -35,6 +35,7 @@
 
 #define XO_CLK_RATE	19200000
 
+extern int get_com_lcd_id(void);
 /* Master structure to hold all the information about the DSI/panel */
 static struct mdss_dsi_data *mdss_dsi_res;
 
@@ -298,6 +299,7 @@ end:
 static int mdss_dsi_panel_power_on(struct mdss_panel_data *pdata)
 {
 	int ret = 0;
+	int lcd_id = 0;
 	struct mdss_dsi_ctrl_pdata *ctrl_pdata = NULL;
 
 	if (pdata == NULL) {
@@ -305,24 +307,28 @@ static int mdss_dsi_panel_power_on(struct mdss_panel_data *pdata)
 		return -EINVAL;
 	}
 
+	lcd_id = get_com_lcd_id();
+
 	ctrl_pdata = container_of(pdata, struct mdss_dsi_ctrl_pdata,
 				panel_data);
 
 	ret = msm_dss_enable_vreg(
 		ctrl_pdata->panel_power_data.vreg_config,
-		ctrl_pdata->panel_power_data.num_vreg, 1);
+		ctrl_pdata->panel_power_data.num_vreg-2, 1);
 	if (ret) {
 		pr_err("%s: failed to enable vregs for %s\n",
 			__func__, __mdss_dsi_pm_name(DSI_PANEL_PM));
 		return ret;
 	}
 
-	/*
-	 * If continuous splash screen feature is enabled, then we need to
-	 * request all the GPIOs that have already been configured in the
-	 * bootloader. This needs to be done irresepective of whether
-	 * the lp11_init flag is set or not.
-	 */
+	if(lcd_id == 1){
+		printk("---yhj check in %s 20160712,lcd_id = %d .\n",__func__,lcd_id);
+		/*
+		 * If continuous splash screen feature is enabled, then we need to
+		 * request all the GPIOs that have already been configured in the
+		 * bootloader. This needs to be done irresepective of whether
+		 * the lp11_init flag is set or not.
+		 */
 	if (pdata->panel_info.cont_splash_enabled ||
 		!pdata->panel_info.mipi.lp11_init) {
 		if (mdss_dsi_pinctrl_set_state(ctrl_pdata, true))
@@ -332,6 +338,74 @@ static int mdss_dsi_panel_power_on(struct mdss_panel_data *pdata)
 		if (ret)
 			pr_err("%s: Panel reset failed. rc=%d\n",
 					__func__, ret);
+	}
+
+	//yxw add
+	msleep(20);
+	ret = odm_enable_VSP_VSN(ctrl_pdata->panel_power_data.vreg_config,ctrl_pdata->panel_power_data.num_vreg, 1);
+	if (ret) {
+			pr_err("%s: failed to enable vregs for %s\n",
+				__func__, __mdss_dsi_pm_name(DSI_PANEL_PM));
+			return ret;
+		}
+		//end
+		
+	}else if(lcd_id == 2){
+		printk("---yhj check in %s 20160712 ,lcd_id = %d .\n",__func__,lcd_id);
+		//yxw add
+		ret = odm_enable_VSP_VSN(ctrl_pdata->panel_power_data.vreg_config,ctrl_pdata->panel_power_data.num_vreg, 1);
+		if (ret) {
+			pr_err("%s: failed to enable vregs for %s\n",
+				__func__, __mdss_dsi_pm_name(DSI_PANEL_PM));
+			return ret;
+		}
+		//end
+		msleep(20);
+		/*
+		 * If continuous splash screen feature is enabled, then we need to
+		 * request all the GPIOs that have already been configured in the
+		 * bootloader. This needs to be done irresepective of whether
+		 * the lp11_init flag is set or not.
+		 */
+		if (pdata->panel_info.cont_splash_enabled ||
+			!pdata->panel_info.mipi.lp11_init) {
+			if (mdss_dsi_pinctrl_set_state(ctrl_pdata, true))
+				pr_debug("reset enable: pinctrl not enabled\n");
+
+			ret = mdss_dsi_panel_reset(pdata, 1);
+			if (ret)
+				pr_err("%s: Panel reset failed. rc=%d\n",
+						__func__, ret);
+		}
+		
+	}else{
+		printk("---yhj check in %s  error --- 20160712 ---\n",__func__);
+		/*
+		 * If continuous splash screen feature is enabled, then we need to
+		 * request all the GPIOs that have already been configured in the
+		 * bootloader. This needs to be done irresepective of whether
+		 * the lp11_init flag is set or not.
+		 */
+		if (pdata->panel_info.cont_splash_enabled ||
+			!pdata->panel_info.mipi.lp11_init) {
+			if (mdss_dsi_pinctrl_set_state(ctrl_pdata, true))
+				pr_debug("reset enable: pinctrl not enabled\n");
+
+			ret = mdss_dsi_panel_reset(pdata, 1);
+			if (ret)
+				pr_err("%s: Panel reset failed. rc=%d\n",
+						__func__, ret);
+		}
+
+		//yxw add
+		msleep(20);
+		ret = odm_enable_VSP_VSN(ctrl_pdata->panel_power_data.vreg_config,ctrl_pdata->panel_power_data.num_vreg, 1);
+		if (ret) {
+			pr_err("%s: failed to enable vregs for %s\n",
+				__func__, __mdss_dsi_pm_name(DSI_PANEL_PM));
+			return ret;
+		}
+		//end
 	}
 
 	return ret;
@@ -3370,7 +3444,9 @@ int dsi_panel_device_register(struct platform_device *ctrl_pdev,
 		ctrl_pdata->mdss_util->panel_intf_status(pinfo->pdest,
 		MDSS_PANEL_INTF_DSI) ? true : false;
 
-	pr_info("%s: Continuous splash %s\n", __func__,
+	//pinfo->cont_splash_enabled = false;//yxw add
+
+	pr_err("%s: Continuous splash %s\n", __func__,
 		pinfo->cont_splash_enabled ? "enabled" : "disabled");
 
 	if (pinfo->cont_splash_enabled) {

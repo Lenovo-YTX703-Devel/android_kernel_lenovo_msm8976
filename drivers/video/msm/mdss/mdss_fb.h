@@ -252,7 +252,10 @@ struct msm_fb_data_type {
 	u32 index;
 	u32 ref_cnt;
 	u32 fb_page;
-
+	//add by yhj 20160525
+	struct class *mdss_class;
+	struct device *lcd_dev;
+	//add end
 	struct panel_id panel;
 	struct mdss_panel_info *panel_info;
 	struct mdss_panel_info reconfig_panel_info;

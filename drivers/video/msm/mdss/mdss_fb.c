@@ -71,6 +71,11 @@
 #define BLANK_FLAG_LP	FB_BLANK_NORMAL
 #define BLANK_FLAG_ULP	FB_BLANK_VSYNC_SUSPEND
 
+#define LCD_IC_MAMUFACTURER	"NOVATEK"
+#define LCD_IC_TYPE	"NT35523"
+#define LCD_MODULE_MAMUFACTURER	"AVO"
+#define LCD_MODULE_MAMUFACTURER2	"INNOLUX"
+
 static struct fb_info *fbi_list[MAX_FBI_LIST];
 static int fbi_list_index;
 
@@ -115,6 +120,45 @@ static void mdss_panelinfo_to_fb_var(struct mdss_panel_info *pinfo,
 					struct fb_var_screeninfo *var);
 
 static int lcd_backlight_registered;
+extern int get_com_lcd_id(void);
+//add by yhj 20160525
+static ssize_t lcd_ic_show(struct device *dev,
+				  struct device_attribute *attr, char *buf)
+{
+	int ret;
+	ret = sprintf(buf, "LCD IC manufacturer  is [%s] ,The type is [%s].\n",LCD_IC_MAMUFACTURER,LCD_IC_TYPE);
+	return ret;
+}
+
+static DEVICE_ATTR(lcd_ic, 0664, lcd_ic_show, NULL);
+
+static ssize_t lcd_Module_show(struct device *dev,
+				  struct device_attribute *attr, char *buf)
+{
+	int ret;
+	int lcd_id = 0;
+	lcd_id = get_com_lcd_id();
+	if(lcd_id == 1){
+		ret = sprintf(buf, "LCD Module manufacturer is [%s] .\n",LCD_MODULE_MAMUFACTURER);
+	}else if(lcd_id == 2){
+		ret = sprintf(buf, "LCD Module manufacturer is [%s] .\n",LCD_MODULE_MAMUFACTURER2);
+	}
+	return ret;
+}
+
+static DEVICE_ATTR(lcd_Module, 0664, lcd_Module_show, NULL);
+
+static ssize_t lcd_resolution_show(struct device *dev,
+				  struct device_attribute *attr, char *buf)
+{
+	int ret;
+	ret = sprintf(buf, "LCD resolution  is [%s] .\n","1600*2560");
+	return ret;
+}
+
+static DEVICE_ATTR(lcd_resolution, 0664, lcd_resolution_show, NULL);
+
+//add end
 
 static void mdss_fb_set_bl_brightness(struct led_classdev *led_cdev,
 				      enum led_brightness value)
@@ -147,7 +191,7 @@ static void mdss_fb_set_bl_brightness(struct led_classdev *led_cdev,
 }
 
 static struct led_classdev backlight_led = {
-	.name           = "lcd-backlight",
+	.name           = "yxw-lcd-backlight",
 	.brightness     = MDSS_MAX_BL_BRIGHTNESS / 2,
 	.brightness_set = mdss_fb_set_bl_brightness,
 	.max_brightness = MDSS_MAX_BL_BRIGHTNESS,
@@ -990,6 +1034,30 @@ static int mdss_fb_probe(struct platform_device *pdev)
 			pr_err("failed to register input handler\n");
 
 	INIT_DELAYED_WORK(&mfd->idle_notify_work, __mdss_fb_idle_notify_work);
+
+	//add by yhj 20160525
+	mfd->mdss_class =  class_create(THIS_MODULE, "lcd");
+	if (IS_ERR(mfd->mdss_class)) {
+		rc = PTR_ERR(mfd->mdss_class);
+		mfd->mdss_class = NULL;
+	}
+
+	mfd->lcd_dev = device_create(mfd->mdss_class,
+				NULL, 0, "%s", "lcd_info");
+	if (unlikely(IS_ERR(mfd->lcd_dev))) {
+		rc = PTR_ERR(mfd->lcd_dev);
+		mfd->lcd_dev = NULL;
+	}
+
+	/* register the attributes */
+	rc  = device_create_file(mfd->lcd_dev, &dev_attr_lcd_ic);
+
+	/* register the attributes */
+	rc  = device_create_file(mfd->lcd_dev, &dev_attr_lcd_Module);
+
+	/* register the attributes */
+	rc  = device_create_file(mfd->lcd_dev, &dev_attr_lcd_resolution);
+	//add end
 
 	return rc;
 }
