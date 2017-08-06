@@ -1,0 +1,6 @@
+
+config USB_DEV_AX88772
+	bool "usb otg device netcard driver support"
+	default y
+	
+source "drivers/usb/dev_drv/AX88772/Kconfig"

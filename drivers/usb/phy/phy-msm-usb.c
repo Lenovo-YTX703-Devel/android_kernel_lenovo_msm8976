@@ -3463,6 +3463,7 @@ static void msm_otg_sm_work(struct work_struct *w)
 						OTG_STATE_B_PERIPHERAL;
 					mod_timer(&motg->chg_check_timer,
 							CHG_RECHECK_DELAY);
+					msm_otg_notify_charger(motg,500);
 					break;
 				default:
 					break;
@@ -6446,6 +6447,7 @@ static void msm_otg_shutdown(struct platform_device *pdev)
 
 	dev_dbg(&pdev->dev, "OTG shutdown\n");
 	msm_hsusb_vbus_power(motg, 0);
+	msleep(50);//add by zouhao for vbus 1->0 time is long
 }
 
 #ifdef CONFIG_PM_RUNTIME

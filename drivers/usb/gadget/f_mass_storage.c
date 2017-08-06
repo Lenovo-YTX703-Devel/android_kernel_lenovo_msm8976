@@ -324,6 +324,7 @@ struct fsg_common {
 
 	struct kref		ref;
 	struct timer_list	vfs_timer;
+	int bicr;
 };
 
 struct fsg_config {

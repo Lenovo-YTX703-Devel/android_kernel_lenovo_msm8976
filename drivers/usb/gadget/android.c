@@ -2456,14 +2456,14 @@ struct mass_storage_function_config {
 static int mass_storage_function_init(struct android_usb_function *f,
 					struct usb_composite_dev *cdev)
 {
-	struct android_dev *dev = cdev_to_android_dev(cdev);
+	//struct android_dev *dev = cdev_to_android_dev(cdev);
 	struct mass_storage_function_config *config;
 	struct fsg_common *common;
 	int err;
-	int i, n;
+	int i;// n;
 	char name[FSG_MAX_LUNS][MAX_LUN_NAME];
-	u8 uicc_nluns = dev->pdata ? dev->pdata->uicc_nluns : 0;
-
+	//u8 uicc_nluns = dev->pdata ? dev->pdata->uicc_nluns : 0;
+    printk(KERN_ERR "***wzj***config->common->bicr \n");
 	config = kzalloc(sizeof(struct mass_storage_function_config),
 							GFP_KERNEL);
 	if (!config) {
@@ -2472,6 +2472,9 @@ static int mass_storage_function_init(struct android_usb_function *f,
 	}
 
 	config->fsg.nluns = 1;
+	snprintf(name[0], MAX_LUN_NAME, "lun");
+	config->fsg.luns[0].removable = 1;
+#if 0
 	snprintf(name[0], MAX_LUN_NAME, "lun");
 	config->fsg.luns[0].removable = 1;
 
@@ -2495,6 +2498,7 @@ static int mass_storage_function_init(struct android_usb_function *f,
 		config->fsg.nluns++;
 	}
 
+#endif
 	common = fsg_common_init(NULL, cdev, &config->fsg);
 	if (IS_ERR(common)) {
 		kfree(config);
@@ -2680,9 +2684,62 @@ static DEVICE_ATTR(luns, S_IRUGO | S_IWUSR,
 				mass_storage_lun_info_show,
 				mass_storage_lun_info_store);
 
+static ssize_t mass_storage_bicr_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	struct android_usb_function *f = dev_get_drvdata(dev);
+	struct mass_storage_function_config *config = f->config;
+	return snprintf(buf, PAGE_SIZE, "%d\n", config->common->bicr);
+}
+
+static ssize_t mass_storage_bicr_store(struct device *dev,
+		struct device_attribute *attr, const char *buf, size_t size)
+{
+#if 0
+	struct android_usb_function *f = dev_get_drvdata(dev);
+	struct mass_storage_function_config *config = f->config;
+	int value;
+	printk(KERN_ERR "***wzj***buf=%s\n",buf);
+	if (sscanf(buf, "%d", &value) == 1) {
+		config->common->bicr = value;
+		f_mass_storage_bicr= value;
+		return size;
+	}
+	return -EINVAL;
+#else
+	struct android_usb_function *f = dev_get_drvdata(dev);
+	struct mass_storage_function_config *config = f->config;
+
+	printk(KERN_ERR "***wzj*** enter\n");
+	if (size >= sizeof(config->common->bicr))
+		return -EINVAL;
+	if (sscanf(buf, "%d", &config->common->bicr) != 1)
+		return -EINVAL;
+
+	printk(KERN_ERR "***wzj***buf=%s\n",buf);
+	/* Set Lun[0] is a CDROM when enable bicr.*/
+	if (!strcmp(buf, "1"))
+		config->common->luns[0].cdrom = 1;
+	else {
+		/*Reset the value. Clean the cdrom's parameters*/
+		config->common->luns[0].cdrom = 0;
+		config->common->luns[0].blkbits = 0;
+		config->common->luns[0].blksize = 0;
+		config->common->luns[0].num_sectors = 0;
+	}
+
+	return size;
+#endif
+}
+
+static DEVICE_ATTR(bicr, S_IRUGO | S_IWUSR,
+		mass_storage_bicr_show,
+		mass_storage_bicr_store);
+
 static struct device_attribute *mass_storage_function_attributes[] = {
 	&dev_attr_inquiry_string,
 	&dev_attr_luns,
+	&dev_attr_bicr,
 	NULL
 };
 
