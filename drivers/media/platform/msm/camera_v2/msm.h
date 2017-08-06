@@ -109,6 +109,13 @@ struct msm_session {
 	struct mutex lock;
 	struct mutex close_lock;
 };
+ 
+struct camera_module_info_t {
+  char sensor_name[10];
+  char module_name[10];
+};
+
+void byd_get_camera_name(const char* name, int position);
 
 void msm_pm_qos_update_request(int val);
 
