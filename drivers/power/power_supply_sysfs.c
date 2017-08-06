@@ -70,6 +70,9 @@ static ssize_t power_supply_show_property(struct device *dev,
 	static char *scope_text[] = {
 		"Unknown", "System", "Device"
 	};
+	static char *standard_adapter_text[] = {
+		"checking", "standard", "non-standard"
+	};
 	ssize_t ret = 0;
 	struct power_supply *psy = dev_get_drvdata(dev);
 	const ptrdiff_t off = attr - power_supply_attrs;
@@ -104,9 +107,11 @@ static ssize_t power_supply_show_property(struct device *dev,
 		return sprintf(buf, "%s\n", type_text[value.intval]);
 	else if (off == POWER_SUPPLY_PROP_SCOPE)
 		return sprintf(buf, "%s\n", scope_text[value.intval]);
+	else if	(off == POWER_SUPPLY_PROP_STANDARD_ADAPTER)		//mozuyuan add
+		return sprintf(buf, "%s\n", standard_adapter_text[value.intval]);
 	else if (off >= POWER_SUPPLY_PROP_MODEL_NAME)
 		return sprintf(buf, "%s\n", value.strval);
-
+	
 	if (off == POWER_SUPPLY_PROP_CHARGE_COUNTER_EXT)
 		return sprintf(buf, "%lld\n", value.int64val);
 	else
@@ -212,6 +217,13 @@ static struct device_attribute power_supply_attrs[] = {
 	POWER_SUPPLY_ATTR(system_temp_level),
 	POWER_SUPPLY_ATTR(resistance),
 	POWER_SUPPLY_ATTR(resistance_capacitive),
+	POWER_SUPPLY_ATTR(vbus_now),				//mzy add 20160428
+	POWER_SUPPLY_ATTR(standard_adapter),		//mzy add 20160428
+	POWER_SUPPLY_ATTR(mtk_handshake),			//mzy add 20160428
+	POWER_SUPPLY_ATTR(current_fit),				//mzy add 20160509
+	POWER_SUPPLY_ATTR(pm_control_wake),				//mzy add 20160510
+	POWER_SUPPLY_ATTR(pm_control_relax),				//mzy add 20160510
+	POWER_SUPPLY_ATTR(iindpm_status),				//
 	POWER_SUPPLY_ATTR(resistance_id),
 	POWER_SUPPLY_ATTR(resistance_now),
 	/* Local extensions */
