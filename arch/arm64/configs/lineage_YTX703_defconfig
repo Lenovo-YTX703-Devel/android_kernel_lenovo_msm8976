@@ -1426,6 +1426,39 @@ CONFIG_WLAN=y
 # CONFIG_WIFI_CONTROL_FUNC is not set
 # CONFIG_LIBRA_SDIOIF is not set
 # CONFIG_ATH6K_LEGACY_EXT is not set
+
+# WLAN prima
+CONFIG_PRIMA_WLAN=y
+CONFIG_PRONTO_WLAN=y
+# Flag to enable BlueTooth AMP feature
+CONFIG_PRIMA_WLAN_BTAMP=n
+# Flag to enable Legacy Fast Roaming(LFR)
+CONFIG_PRIMA_WLAN_LFR=y
+# Flag to enable Legacy Fast Roaming(LFR) Make Before Break
+CONFIG_PRIMA_WLAN_LFR_MBB=y
+# JB kernel has PMKSA patches, hence enabling this flag
+CONFIG_PRIMA_WLAN_OKC=y
+# JB kernel has CPU enablement patches, so enable
+CONFIG_PRIMA_WLAN_11AC_HIGH_TP=y
+# Flag to enable mDNS feature
+CONFIG_MDNS_OFFLOAD_SUPPORT=y
+# Flag to enable TDLS feature
+CONFIG_QCOM_TDLS=y
+# Flag to enable Fast Transition (11r) feature
+CONFIG_QCOM_VOWIFI_11R=y
+# Flag to enable Protected Managment Frames (11w) feature
+CONFIG_WLAN_FEATURE_11W=y
+# Flag to enable new Linux Regulatory implementation
+CONFIG_ENABLE_LINUX_REG=y
+# Flag to enable offload packets feature
+CONFIG_WLAN_OFFLOAD_PACKETS=y
+# Flag to enable AP Find feature
+CONFIG_WLAN_FEATURE_AP_FIND=y
+# To enable CONFIG_QCOM_ESE_UPLOAD, dependent config
+# CONFIG_QCOM_ESE must be enabled.
+CONFIG_QCOM_ESE=y
+CONFIG_QCOM_ESE_UPLOAD=y
+
 CONFIG_WCNSS_CORE=y
 CONFIG_WCNSS_CORE_PRONTO=y
 CONFIG_WCNSS_MEM_PRE_ALLOC=y
