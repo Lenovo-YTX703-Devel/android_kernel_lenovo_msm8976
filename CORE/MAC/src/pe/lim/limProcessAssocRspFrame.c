@@ -555,16 +555,19 @@ limProcessAssocRspFrame(tpAniSirGlobal pMac, tANI_U8 *pRxPacketInfo, tANI_U8 sub
     if(pAssocRsp->ricPresent)
     {
         psessionEntry->RICDataLen = pAssocRsp->num_RICData * sizeof(tDot11fIERICDataDesc);
-        psessionEntry->ricData = vos_mem_malloc(psessionEntry->RICDataLen);
-        if ( NULL == psessionEntry->ricData )
+        if (psessionEntry->RICDataLen)
         {
-            PELOGE(limLog(pMac, LOGE, FL("Unable to allocate memory to store assoc response"));)
-            psessionEntry->RICDataLen = 0; 
-        }
-        else
-        {
-            vos_mem_copy(psessionEntry->ricData,
-                         &pAssocRsp->RICData[0], psessionEntry->RICDataLen);
+            psessionEntry->ricData = vos_mem_malloc(psessionEntry->RICDataLen);
+            if ( NULL == psessionEntry->ricData )
+            {
+                PELOGE(limLog(pMac, LOGE, FL("Unable to allocate memory to store assoc response"));)
+                psessionEntry->RICDataLen = 0;
+            }
+            else
+            {
+                vos_mem_copy(psessionEntry->ricData,
+                             &pAssocRsp->RICData[0], psessionEntry->RICDataLen);
+            }
         }
     }
     else
@@ -917,6 +920,18 @@ limProcessAssocRspFrame(tpAniSirGlobal pMac, tANI_U8 *pRxPacketInfo, tANI_U8 sub
       (tANI_U8 *) psessionEntry->pLimJoinReq->bssDescription.ieFields,
       GET_IE_LEN_IN_BSS(psessionEntry->pLimJoinReq->bssDescription.length),
       pBeaconStruct);
+
+    if (pBeaconStruct->VHTCaps.present)
+        pStaDs->parsed_ies.vht_caps = pBeaconStruct->VHTCaps;
+    if (pBeaconStruct->HTCaps.present)
+        pStaDs->parsed_ies.ht_caps = pBeaconStruct->HTCaps;
+    if (pBeaconStruct->hs20vendor_ie.present)
+        pStaDs->parsed_ies.hs20vendor_ie =
+            pBeaconStruct->hs20vendor_ie;
+    if (pBeaconStruct->HTInfo.present)
+        pStaDs->parsed_ies.ht_operation = pBeaconStruct->HTInfo;
+    if (pBeaconStruct->VHTOperation.present)
+        pStaDs->parsed_ies.vht_operation = pBeaconStruct->VHTOperation;
 
     if(pMac->lim.gLimProtectionControl != WNI_CFG_FORCE_POLICY_PROTECTION_DISABLE)
         limDecideStaProtectionOnAssoc(pMac, pBeaconStruct, psessionEntry);
