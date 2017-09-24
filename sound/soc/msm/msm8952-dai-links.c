@@ -1170,29 +1170,9 @@ static struct snd_soc_aux_dev msm895x_aux_dev[] = {
 		.codec_name = NULL,
 		.init = msm895x_wsa881x_init,
 	},
-	/*add cpf 2016.04.06*/
-	{
-		.name = "wsa881x.2",
-		.codec_name = NULL,
-		.init = msm895x_wsa881x_init,
-	},
-	{
-		.name = "wsa881x.3",
-		.codec_name = NULL,
-		.init = msm895x_wsa881x_init,
-	},
 };
 
 static struct snd_soc_codec_conf msm895x_codec_conf[] = {
-	{
-		.dev_name = NULL,
-		.name_prefix = NULL,
-	},
-	{
-		.dev_name = NULL,
-		.name_prefix = NULL,
-	},
-	/*add cpf 2016.04.06*/
 	{
 		.dev_name = NULL,
 		.name_prefix = NULL,

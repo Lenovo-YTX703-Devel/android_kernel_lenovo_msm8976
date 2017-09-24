@@ -28,6 +28,7 @@
 #include <sound/info.h>
 #include <soc/qcom/socinfo.h>
 #include <linux/input.h>
+#include <linux/thermal.h>
 #include "qdsp6v2/msm-pcm-routing-v2.h"
 #include "msm-audio-pinctrl.h"
 #include "msm8952-slimbus.h"
@@ -71,6 +72,9 @@
 #define WSA8810_NAME_1 "wsa881x.20170211"
 #define WSA8810_NAME_2 "wsa881x.20170212"
 
+#define SPK_PA_1_GPIO 910
+#define SPK_PA_2_GPIO 911
+
 enum btsco_rates {
 	RATE_8KHZ_ID,
 	RATE_16KHZ_ID,
@@ -94,6 +98,9 @@ static int msm8952_auxpcm_rate = SAMPLING_RATE_8KHZ;
 static int msm_btsco_rate = SAMPLING_RATE_8KHZ;
 static int msm_btsco_ch = 1;
 static int msm8952_spk_control = 1;
+static int msm8952_spk_pa_1_control = 0;
+static int msm8952_spk_pa_2_control = 0;
+
 
 static bool codec_reg_done;
 
@@ -352,6 +359,26 @@ static inline struct snd_mask *param_to_mask(struct snd_pcm_hw_params *p, int n)
 	return &(p->masks[n - SNDRV_PCM_HW_PARAM_FIRST_MASK]);
 }
 
+
+static int wsa881x_get_temp(struct thermal_zone_device *thermal,
+                     unsigned long *temp)
+{
+	return 0;
+}
+
+
+static struct thermal_zone_device_ops wsa881x_thermal_ops = {
+        .get_temp = wsa881x_get_temp,
+};
+
+static struct thermal_zone_device *wsa881x_init_thermal_zone(char *name) {
+	struct thermal_zone_device *tz_dev = thermal_zone_device_register(
+			name, 0, 0, NULL,
+			&wsa881x_thermal_ops, NULL, 0, 0);
+	pr_err("%s: registered thermal zone %s\n", __func__, tz_dev->type);
+	return tz_dev;
+}
+
 int msm895x_wsa881x_init(struct snd_soc_dapm_context *dapm)
 {
 	u8 spkleft_ports[WSA881X_MAX_SWR_PORTS] = {100, 101, 102, 106};
@@ -363,8 +390,8 @@ int msm895x_wsa881x_init(struct snd_soc_dapm_context *dapm)
 	struct msm895x_auxcodec_prefix_map codec_prefix_map[MAX_AUX_CODECS] = {
 	{ "wsa881x.20170211", "SpkrLeft" },
 	{ "wsa881x.20170212", "SpkrRight" },
-	{ "wsa881x.21170213", "SpkrLeft3" },
-	{ "wsa881x.21170214", "SpkrRight4" } };
+	{ "wsa881x.21170213", "SpkrLeft" },
+	{ "wsa881x.21170214", "SpkrRight" } };
 	u8 i;
 
 	if (!dapm->codec->name) {
@@ -390,11 +417,11 @@ int msm895x_wsa881x_init(struct snd_soc_dapm_context *dapm)
 		wsa881x_set_channel_map(dapm->codec, &spkright_ports[0],
 				WSA881X_MAX_SWR_PORTS, &ch_mask[0],
 				&ch_rate[0]);
-	}/* else {
+	} else {
 		dev_err(dapm->codec->dev, "%s: wrong codec name %s\n", __func__,
 			dapm->codec->name);
 		return -EINVAL;
-	}*/
+	}
 	pdata = snd_soc_card_get_drvdata(card);
 	if (pdata && pdata->codec_root)
 		wsa881x_codec_info_create_codec_entry(pdata->codec_root,
@@ -960,6 +987,56 @@ static int msm_proxy_rx_ch_put(struct snd_kcontrol *kcontrol,
 	return 0;
 }
 
+static int msm8952_get_spk_pa_1_switch(struct snd_kcontrol *kcontrol,
+                       struct snd_ctl_elem_value *ucontrol)
+{
+	pr_debug("%s: msm8952_spk_pa_1_control = %d\n",
+		__func__, msm8952_spk_pa_1_control);
+	ucontrol->value.integer.value[0] = msm8952_spk_pa_1_control;
+	return 0;
+}
+
+static int msm8952_set_spk_pa_1_switch(struct snd_kcontrol *kcontrol,
+                       struct snd_ctl_elem_value *ucontrol)
+{
+	pr_debug("%s: ucontrol value = %ld\n", __func__,
+		ucontrol->value.integer.value[0]);
+	if (msm8952_spk_pa_1_control == ucontrol->value.integer.value[0])
+		return 0;
+
+	gpio_direction_output(SPK_PA_1_GPIO, ucontrol->value.integer.value[0]);
+	msm8952_spk_pa_1_control = ucontrol->value.integer.value[0];
+	pr_debug("%s: msm8952_spk_pa_1_control = %d\n",
+		__func__, msm8952_spk_pa_1_control);
+	return 1;
+}
+
+static int msm8952_get_spk_pa_2_switch(struct snd_kcontrol *kcontrol,
+                       struct snd_ctl_elem_value *ucontrol)
+{
+	pr_debug("%s: msm8952_spk_pa_2_control = %d\n",
+		__func__, msm8952_spk_pa_2_control);
+	ucontrol->value.integer.value[0] = msm8952_spk_pa_2_control;
+	return 0;
+}
+
+static int msm8952_set_spk_pa_2_switch(struct snd_kcontrol *kcontrol,
+                       struct snd_ctl_elem_value *ucontrol)
+{
+	pr_debug("%s: ucontrol value = %ld\n", __func__,
+		ucontrol->value.integer.value[0]);
+	if (msm8952_spk_pa_2_control == ucontrol->value.integer.value[0])
+		return 0;
+
+	gpio_direction_output(SPK_PA_2_GPIO, ucontrol->value.integer.value[0]);
+	msm8952_spk_pa_2_control = ucontrol->value.integer.value[0];
+	pr_debug("%s: msm8952_spk_pa_2_control = %d\n",
+		__func__, msm8952_spk_pa_2_control);
+	return 1;
+}
+
+static const char *const spk_pa_1_function[] = {"Off", "On"};
+static const char *const spk_pa_2_function[] = {"Off", "On"};
 static const char *const spk_function[] = {"Off", "On"};
 static const char *const slim0_rx_ch_text[] = {"One", "Two"};
 static const char *const slim0_tx_ch_text[] = {"One", "Two", "Three", "Four",
@@ -989,6 +1066,8 @@ static const struct soc_enum msm_snd_enum[] = {
 			    slim5_rx_bit_format_text),
 	SOC_ENUM_SINGLE_EXT(2, slim5_rx_ch_text),
 	SOC_ENUM_SINGLE_EXT(8, proxy_rx_ch_text),
+	SOC_ENUM_SINGLE_EXT(2, spk_pa_1_function),
+	SOC_ENUM_SINGLE_EXT(2, spk_pa_2_function),
 };
 
 static const char *const btsco_rate_text[] = {"BTSCO_RATE_8KHZ",
@@ -1025,9 +1104,13 @@ static const struct snd_kcontrol_new msm_snd_controls[] = {
 	SOC_ENUM_EXT("SLIM_0_TX Format", msm_snd_enum[3],
 			slim0_tx_bit_format_get, slim0_tx_bit_format_put),
 	SOC_ENUM_EXT("Internal BTSCO SampleRate", msm_btsco_enum[0],
-		     msm_btsco_rate_get, msm_btsco_rate_put),
+			msm_btsco_rate_get, msm_btsco_rate_put),
 	SOC_ENUM_EXT("PROXY_RX Channels", msm_snd_enum[9],
 			msm_proxy_rx_ch_get, msm_proxy_rx_ch_put),
+	SOC_ENUM_EXT("Spk PA Switch 1", msm_snd_enum[10],
+			msm8952_get_spk_pa_1_switch, msm8952_set_spk_pa_1_switch),
+	SOC_ENUM_EXT("Spk PA Switch 2", msm_snd_enum[11],
+			msm8952_get_spk_pa_2_switch, msm8952_set_spk_pa_2_switch),
 };
 
 int msm_be_hw_params_fixup(struct snd_soc_pcm_runtime *rtd,
@@ -2640,6 +2723,19 @@ static int msm8952_asoc_machine_probe(struct platform_device *pdev)
 				__func__, ret);
 		goto err;
 	}
+
+
+        // christianc: register dummy thermal zones, so that the HAL switches to WSA mode
+        wsa881x_init_thermal_zone("wsatz.0");
+        wsa881x_init_thermal_zone("wsatz.1");
+
+	// christianc: request GPIO for both spk pa
+	gpio_request(SPK_PA_1_GPIO, WSA8810_NAME_1);
+	gpio_request(SPK_PA_2_GPIO, WSA8810_NAME_2);
+
+	// christianc: disable speakers initially
+	gpio_direction_output(SPK_PA_1_GPIO, false);
+	gpio_direction_output(SPK_PA_2_GPIO, false);
 
 	return 0;
 err:
