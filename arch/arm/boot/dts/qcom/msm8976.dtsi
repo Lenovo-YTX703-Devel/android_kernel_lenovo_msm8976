@@ -118,6 +118,13 @@
 			reg = <0x0 0x0 0x0 0x400000>;
 			label = "adsp_mem";
 		};
+
+                ramoops_mem: ramoops_region@0 {
+                        linux,reserve-contiguous-region;
+                        linux,reserve-region;
+                        reg = <0x0 0x30000000 0x0 0x300000>;
+                        label = "ramooops_mem";
+                };
 	};
 };
 
