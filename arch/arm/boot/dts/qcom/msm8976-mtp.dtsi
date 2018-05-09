@@ -17,12 +17,12 @@
 #include "msm8976-wsa881x.dtsi"
 
 &i2c_4 { /* BLSP1 QUP4 */
-	synaptics@20 {
+	synaptics_dsx@38 {
 		compatible = "synaptics,dsx";
-		reg = <0x20>;
+		reg = <0x38>;
 		interrupt-parent = <&msm_gpio>;
 		interrupts = <65 0x2008>;
-		avdd-supply = <&pm8950_l10>;
+		avdd-supply = <&pm8950_l17>;
 		vdd-supply = <&pm8950_l6>;
 		clock-names = "iface_clk", "core_clk";
 		clocks = <&clock_gcc clk_gcc_blsp1_ahb_clk>,
@@ -39,11 +39,15 @@
 		synaptics,disable-gpios;
 		synaptics,detect-device;
 		synaptics,bypass-packrat-id-check;
+		synaptics,power-delay-ms = <60>;
+		synaptics,reset-delay-ms = <60>;
+		synaptics,reset-active-ms = <10>;
+		synaptics,reset-on-state = <0>;
+		synaptics,irq-flags = <0x2008>; /* IRQF_ONESHOT | IRQF_TRIGGER_LOW */
+		synaptics,swap-axes;
+		synaptics,y-flip;
 		synaptics,device1 {
-			synaptics,package-id = <3528>;
-			synaptics,bypass-sensor-coords-check;
-			synaptics,display-coords = <0 0 1439 2559>;
-			synaptics,panel-coords = <0 0 1439 2559>;
+			synaptics,package-id = <7813>;
 		};
 	};
 };
@@ -55,7 +59,7 @@
 		qcom,nq-irq = <&msm_gpio 21 0x00>;
 		qcom,nq-ven = <&msm_gpio 20 0x00>;
 		qcom,nq-clkreq = <&pm8950_gpios 5 0x00>;
-		qcom,nq-firm = <&msm_gpio 16 0x00>;
+		//qcom,nq-firm = <&msm_gpio 16 0x00>;
 		interrupt-parent = <&msm_gpio>;
 		qcom,clk-src = "BBCLK2";
 		interrupts = <21 0>;
