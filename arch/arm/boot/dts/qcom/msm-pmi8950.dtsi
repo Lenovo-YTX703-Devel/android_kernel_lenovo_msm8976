@@ -198,21 +198,25 @@
 			#address-cells = <1>;
 			#size-cells = <1>;
 
-			qcom,iterm-ma = <100>;
-			qcom,float-voltage-mv = <4200>;
-			qcom,resume-delta-mv = <200>;
+			//qcom,iterm-ma = <100>;
+			//qcom,float-voltage-mv = <4350>;
+			//qcom,resume-delta-mv = <200>;
 			qcom,chg-inhibit-fg;
 			qcom,rparasitic-uohm = <100000>;
 			qcom,bms-psy-name = "bms";
+			qcom,battery-psy-name= "battery";
 			qcom,thermal-mitigation = <1500 700 600 0>;
 			qcom,parallel-usb-min-current-ma = <1400>;
 			qcom,parallel-usb-9v-min-current-ma = <900>;
 			qcom,parallel-allowed-lowering-ma = <500>;
-			qcom,autoadjust-vfloat;
+			//qcom,autoadjust-vfloat;
 			qcom,pmic-revid = <&pmi8950_revid>;
 			qcom,charge-unknown-battery;
-			qcom,force-aicl-rerun;
-			qcom,aicl-rerun-period-s = <180>;
+			//qcom,force-aicl-rerun;
+			//qcom,aicl-rerun-period-s = <180>;
+			//qcom,charging-disabled;
+			qcom,iterm-disabled;
+			qcom,fastchg-current-ma = <3000>;
 
 			qcom,chgr@1000 {
 				reg = <0x1000 0x100>;
@@ -616,8 +620,8 @@
 			qcom,play-mode = "direct";
 			qcom,wave-play-rate-us = <5263>;
 			qcom,actuator-type = "erm";
-			qcom,wave-shape = "square";
-			qcom,vmax-mv = <2000>;
+			qcom,wave-shape = "square";  
+			qcom,vmax-mv = <3600>;			 
 			qcom,ilim-ma = <800>;
 			qcom,sc-deb-cycles = <8>;
 			qcom,int-pwm-freq-khz = <505>;
