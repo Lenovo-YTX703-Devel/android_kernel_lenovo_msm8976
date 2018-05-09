@@ -1463,7 +1463,8 @@
 		};
 
 		wsa_spkr_sd: wsa-spkr-sd {
-			qcom,pins = <&gp 132>;
+			/*qcom,pins = <&gp 132>;*/
+			qcom,pins = <&gp 32>;
 			qcom,num-grp-pins = <1>;
 			qcom,pin-func = <0>;
 			label = "wsa-spkr-sd";
