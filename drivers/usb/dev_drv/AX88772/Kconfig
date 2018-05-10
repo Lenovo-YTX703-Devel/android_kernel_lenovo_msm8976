@@ -1,0 +1,5 @@
+config DRIVER_AX88772
+	bool "netcard AX88772 Driver"
+	default y
+
+
