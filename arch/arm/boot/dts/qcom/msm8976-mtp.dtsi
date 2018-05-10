@@ -69,6 +69,18 @@
 };
 
 &i2c_8 { /* BLSP2 QUP2 */
+	fusb302@22 {
+		compatible = "fairchild,fusb302";
+		reg = <0x22>;
+		fairchild,int_n = <&msm_gpio 135 0x00>;
+		interrupt-parent = <&msm_gpio>;
+		interrupts = <135 0>; /* MSM GPIO 102 */
+		interrupt-names = "fsc_interrupt_int_n";
+		pinctrl-names = "fusb_active", "fusb_suspend";
+		pinctrl-0 = <&fusb_int_active>;
+		pinctrl-1 = <&fusb_int_suspend>;
+	};
+	
 	aw2013@45 {
 		compatible = "awinic,aw2013";
 		reg = <0x45>;
