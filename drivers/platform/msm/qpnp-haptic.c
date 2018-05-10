@@ -25,6 +25,9 @@
 #include <linux/delay.h>
 #include <linux/qpnp/qpnp-haptic.h>
 #include "../../staging/android/timed_output.h"
+#ifdef CONFIG_TOUCHSCREEN_DOUBLETAP2WAKE
+#include <linux/input/doubletap2wake.h>
+#endif
 
 #define QPNP_IRQ_FLAGS	(IRQF_TRIGGER_RISING | \
 			IRQF_TRIGGER_FALLING | \
@@ -2307,6 +2310,10 @@ static int qpnp_haptic_probe(struct spmi_device *spmi)
 	}
 
 	ghap = hap;
+
+#ifdef CONFIG_TOUCHSCREEN_DOUBLETAP2WAKE
+	doubletap2wake_set_vibdev(&hap->timed_dev);
+#endif
 
 	return 0;
 

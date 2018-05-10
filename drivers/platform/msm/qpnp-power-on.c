@@ -30,6 +30,10 @@
 #include <linux/regulator/of_regulator.h>
 #include <linux/qpnp/power-on.h>
 
+#ifdef CONFIG_TOUCHSCREEN_DOUBLETAP2WAKE
+#include <linux/input/doubletap2wake.h>
+#endif
+
 #define CREATE_MASK(NUM_BITS, POS) \
 	((unsigned char) (((1 << (NUM_BITS)) - 1) << (POS)))
 #define PON_MASK(MSB_BIT, LSB_BIT) \
@@ -1070,6 +1074,9 @@ qpnp_pon_config_input(struct qpnp_pon *pon,  struct qpnp_pon_config *cfg)
 		}
 		pon->pon_input->name = "qpnp_pon";
 		pon->pon_input->phys = "qpnp_pon/input0";
+#ifdef CONFIG_TOUCHSCREEN_DOUBLETAP2WAKE
+		doubletap2wake_set_pwrdev(pon->pon_input);
+#endif
 	}
 
 	/* don't send dummy release event when system resumes */

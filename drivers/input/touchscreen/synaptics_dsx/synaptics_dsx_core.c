@@ -36,6 +36,10 @@
 #include <linux/errno.h>
 #endif
 
+#ifdef CONFIG_TOUCHSCREEN_DOUBLETAP2WAKE
+#include <linux/input/doubletap2wake.h>
+#endif
+
 #define INPUT_PHYS_NAME "synaptics_dsx/input0"
 #define DEBUGFS_DIR_NAME "ts_debug"
 
@@ -1429,6 +1433,11 @@ static int synaptics_rmi4_irq_enable(struct synaptics_rmi4_data *rmi4_data,
 	unsigned char intr_status[MAX_INTR_REGISTERS];
 	const struct synaptics_dsx_board_data *bdata =
 			rmi4_data->hw_if->board_data;
+	long irq_flags = bdata->irq_flags;
+
+#ifdef CONFIG_TOUCHSCREEN_DOUBLETAP2WAKE
+	irq_flags |= IRQF_NO_SUSPEND;
+#endif
 
 	if (enable) {
 		if (rmi4_data->irq_enabled)
@@ -1443,7 +1452,7 @@ static int synaptics_rmi4_irq_enable(struct synaptics_rmi4_data *rmi4_data,
 			return retval;
 
 		retval = request_threaded_irq(rmi4_data->irq, NULL,
-				synaptics_rmi4_irq, bdata->irq_flags,
+				synaptics_rmi4_irq, irq_flags,
 				PLATFORM_DRIVER_NAME, rmi4_data);
 		if (retval < 0) {
 			dev_err(rmi4_data->pdev->dev.parent,
@@ -4112,6 +4121,14 @@ static int synaptics_rmi4_suspend(struct device *dev)
 			rmi4_data->hw_if->board_data;
 	int retval;
 
+#ifdef CONFIG_TOUCHSCREEN_DOUBLETAP2WAKE
+	if (dt2w_switch) {
+		dt2w_scr_suspended = true;
+		enable_irq_wake(rmi4_data->irq);
+		return 0;
+	}
+#endif
+
 	if (rmi4_data->stay_awake) {
 		rmi4_data->staying_awake = true;
 		return 0;
@@ -4210,6 +4227,14 @@ static int synaptics_rmi4_resume(struct device *dev)
 	struct synaptics_rmi4_data *rmi4_data = dev_get_drvdata(dev);
 	const struct synaptics_dsx_board_data *bdata =
 			rmi4_data->hw_if->board_data;
+
+#ifdef CONFIG_TOUCHSCREEN_DOUBLETAP2WAKE
+	if (dt2w_switch) {
+		dt2w_scr_suspended = false;
+		disable_irq_wake(rmi4_data->irq);
+		return 0;
+	}
+#endif
 
 	if (rmi4_data->staying_awake)
 		return 0;
