@@ -164,7 +164,7 @@
 			label = "volume_up";
 			gpios = <&msm_gpio 113 0x1>;
 			linux,input-type = <1>;
-			linux,code = <115>;
+			linux,code = <114>;
 			debounce-interval = <15>;
 		};
 	};
