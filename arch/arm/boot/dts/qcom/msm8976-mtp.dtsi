@@ -102,13 +102,19 @@
 
 &i2c_2 {
 	/* Parallel-charger configuration */
-	smb1351-charger@1d {
-		compatible = "qcom,smb1351-charger";
-		reg = <0x1d>;
-		qcom,parallel-en-pin-polarity = <1>;
+	bq25892-charger@6b {
+		compatible = "qcom,bq25892-charger";
+		reg = <0x6b>;
 		qcom,parallel-charger;
-		qcom,float-voltage-mv = <4400>;
-		qcom,recharge-mv = <100>;
+		qcom,float-voltage-mv = <4352>;
+		qcom,recharge-mv = <200>;
+		qcom,fastchg-current-max-ma = <3800>;
+		qcom,iterm-ma = <192>;
+		interrupt-parent = <&msm_gpio>;
+		interrupts = <68 0>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&charger_int_default &charger_psel_default>;
+		qcom,psel-gpio = <&msm_gpio 16 0>;
 	};
 };
 
