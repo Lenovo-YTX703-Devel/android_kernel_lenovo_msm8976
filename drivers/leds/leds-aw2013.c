@@ -388,8 +388,11 @@ static int aw_2013_check_chipid(struct aw2013_led *led)
 	aw2013_read(led, AW_REG_RESET, &val);
 	if (val == AW2013_CHIPID)
 		return 0;
-	else
+	else {
+		dev_err(&led->client->dev, "read chip id: %d, expected: %d\n",
+		        val, AW2013_CHIPID);
 		return -EINVAL;
+	}
 }
 
 static int aw2013_led_err_handle(struct aw2013_led *led_array,
