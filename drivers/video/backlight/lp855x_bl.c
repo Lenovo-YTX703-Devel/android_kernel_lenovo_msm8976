@@ -33,7 +33,7 @@
 #define LP8557_BL_OFF			0x00
 #define LP8557_BRIGHTNESS_CTRL		0x04
 #define LP8557_CONFIG			0x10
-#define LP8557_EPROM_START		0x10
+#define LP8557_EPROM_START		0x00
 #define LP8557_EPROM_END		0x1E
 
 #define DEFAULT_BL_NAME		"lcd-backlight"
