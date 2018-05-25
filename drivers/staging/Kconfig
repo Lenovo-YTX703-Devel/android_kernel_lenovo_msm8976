@@ -44,6 +44,8 @@ source "drivers/staging/asus_oled/Kconfig"
 
 source "drivers/staging/panel/Kconfig"
 
+source "drivers/staging/prima/Kconfig"
+
 source "drivers/staging/rtl8187se/Kconfig"
 
 source "drivers/staging/rtl8192u/Kconfig"
