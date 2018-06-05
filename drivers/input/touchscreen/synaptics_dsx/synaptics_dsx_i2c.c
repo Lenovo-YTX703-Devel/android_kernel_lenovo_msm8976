@@ -325,6 +325,7 @@ static int synaptics_dsx_parse_dt(struct device *dev,
 	u32 button_map[MAX_NUMBER_OF_BUTTONS];
 	int rc, i;
 
+	rmi4_pdata->swap_axes = of_property_read_bool(np, "synaptics,swap-axes");
 	rmi4_pdata->x_flip = of_property_read_bool(np, "synaptics,x-flip");
 	rmi4_pdata->y_flip = of_property_read_bool(np, "synaptics,y-flip");
 
@@ -356,9 +357,32 @@ static int synaptics_dsx_parse_dt(struct device *dev,
 		return rc;
 	}
 
-	/* reset, irq gpio info */
+	/* Backported from stock kernel driver */
+	rc = of_property_read_u32(np, "synaptics,power-delay-ms",
+	                         &temp_val);
+	if (rc < 0)
+		rmi4_pdata->power_delay_ms = 0;
+	else
+		rmi4_pdata->power_delay_ms = temp_val;
+
+	/* reset gpio info */
 	rmi4_pdata->reset_gpio = of_get_named_gpio_flags(np,
-			"synaptics,reset-gpio", 0, &rmi4_pdata->reset_flags);
+	                         "synaptics,reset-gpio", 0,
+	                         &rmi4_pdata->reset_flags);
+
+	rc = of_property_read_u32(np, "synaptics,reset-on-state",
+	                          &temp_val);
+	if (rc < 0)
+	        return rc;
+	rmi4_pdata->reset_on_state = temp_val;
+
+	rc = of_property_read_u32(np, "synaptics,reset-active-ms",
+	                          &temp_val);
+	if (rc < 0)
+	        return rc;
+	rmi4_pdata->reset_active_ms = temp_val;
+
+	/* irq gpio info */
 	rmi4_pdata->irq_gpio = of_get_named_gpio_flags(np,
 			"synaptics,irq-gpio", 0, &rmi4_pdata->irq_flags);
 
