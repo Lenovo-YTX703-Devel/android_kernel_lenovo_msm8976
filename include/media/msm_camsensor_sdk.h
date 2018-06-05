@@ -1,7 +1,5 @@
-#ifndef __UAPI_LINUX_MSM_CAMSENSOR_SDK_H
-#define __UAPI_LINUX_MSM_CAMSENSOR_SDK_H
-
-#include <linux/videodev2.h>
+#ifndef __LINUX_MSM_CAMSENSOR_SDK_H
+#define __LINUX_MSM_CAMSENSOR_SDK_H
 
 #define KVERSION 0x1
 
@@ -373,9 +371,9 @@ struct region_params_t {
 
 struct reg_settings_t {
 	unsigned short reg_addr;
-	enum msm_camera_i2c_reg_addr_type addr_type;
+	enum msm_actuator_addr_type addr_type;
 	unsigned short reg_data;
-	enum msm_camera_i2c_data_type data_type;
+	enum msm_actuator_data_type data_type;
 	enum msm_actuator_i2c_operation i2c_operation;
 	unsigned int delay;
 };
@@ -387,5 +385,4 @@ struct msm_camera_i2c_reg_setting_array {
 	enum msm_camera_i2c_data_type data_type;
 	unsigned short delay;
 };
-
-#endif
+#endif /* __LINUX_MSM_CAM_SENSOR_H */
