@@ -38,6 +38,12 @@
 			/delete-property/ qcom,mdss-fb-splash-logo-enabled;
 		};
 	};
+	/* Compensate for hardware-reversed VOL-UP and VOL-DOWN buttons */
+	gpio_keys {
+		vol_up {
+			linux,code = <114>; /* KEY_VOLUMEDOWN */
+		};
+	};
 	/* pin configuration */
 	tlmm_pinmux: pinctrl@1000000 {
 		/* charger pins: */
@@ -116,7 +122,10 @@
 				qcom,s2-timer = <2000>; /* than reboot */
 				qcom,s2-type = <5>;
 			};
-
+			/* Compensate for hardware-reversed VOL-UP and VOL-DOWN buttons */
+			qcom,pon_2 {
+				linux,code = <115>; /* KEY_VOLUMEUP */
+			};
 		};
 	};
 	/* smbcharger configuration: */
