@@ -64,7 +64,7 @@ static void uhid_queue(struct uhid_device *uhid, struct uhid_event *ev)
 		uhid->head = newhead;
 		wake_up_interruptible(&uhid->waitq);
 	} else {
-		hid_warn(uhid->hid, "Output queue is full\n");
+		hid_dbg(uhid->hid, "Output queue is full\n");
 		kfree(ev);
 	}
 }
