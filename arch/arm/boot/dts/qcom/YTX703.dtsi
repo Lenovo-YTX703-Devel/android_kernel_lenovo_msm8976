@@ -13,6 +13,19 @@
 
 #include "YTX703-camera-sensor.dtsi"
 
+/ {
+	/* reserve memory region for pstore: */
+	memory {
+		pstore_reserve_mem: pstore_reserve_mem_region@0 {
+			linux,reserve-contiguous-region;
+			linux,reserve-region;
+			linux,remove-completely;
+			reg = <0x0 0x30000000 0x0 0x00300000>;
+			label = "pstore_reserve_mem";
+		};
+	};
+};
+
 &soc {
 	/* sound configuration */
 	ext_codec: sound-9335 {
